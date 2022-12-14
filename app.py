@@ -20,7 +20,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ['DATABASE_URL'].replace("postgres://", "postgresql://"))
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -152,7 +152,7 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users)
+    return render_template('users/index.html', users=users, form=g.csrf_form)
 
 
 @app.get('/users/<int:user_id>')
@@ -164,9 +164,8 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    form = g.csrf_form
 
-    return render_template('users/show.html', user=user, form=form)
+    return render_template('users/show.html', user=user, form=g.csrf_form)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -178,8 +177,7 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    form = g.csrf_form
-    return render_template('users/following.html', user=user, form=form)
+    return render_template('users/following.html', user=user, form=g.csrf_form)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -191,7 +189,7 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template('users/followers.html', user=user, form=g.csrf_form)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -245,6 +243,7 @@ def profile():
             user.email = form.email.data
             user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
             user.header_image_url = form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+            user.location = form.location.data
             user.bio = form.bio.data
 
             db.session.add(user)
@@ -347,13 +346,16 @@ def homepage():
     """
 
     if g.user:
+        showing_ids = [following.id for following in g.user.following]
+        showing_ids.append(g.user.id)
         messages = (Message
                     .query
                     .order_by(Message.timestamp.desc())
+                    .filter(Message.user_id.in_(showing_ids))
                     .limit(100)
                     .all())
-        form = g.csrf_form
-        return render_template('home.html', messages=messages, form=form)
+
+        return render_template('home.html', messages=messages, form=g.csrf_form)
 
     else:
         return render_template('home-anon.html')

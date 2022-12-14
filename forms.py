@@ -33,7 +33,8 @@ class EditProfileForm(FlaskForm):
     image_url = StringField('(Optional) Image URL')
     header_image_url = StringField('(Optional) Header Image URL')
     bio = StringField('Bio', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[Length(min=6)])
+    location = StringField('Location', validators=[DataRequired()])
+    password = PasswordField('Password')
 
 
 class CSRFProtection(FlaskForm):
