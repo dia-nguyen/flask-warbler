@@ -5,8 +5,8 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtection
-from models import db, connect_db, User, Message
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtection, EditProfileForm
+from models import db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 
 load_dotenv()
 
@@ -78,7 +78,7 @@ def signup():
                 username=form.username.data,
                 password=form.password.data,
                 email=form.email.data,
-                image_url=form.image_url.data or User.image_url.default.arg,
+                image_url=form.image_url.data or DEFAULT_IMAGE_URL
             )
             db.session.commit()
 
@@ -164,8 +164,9 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
+    form = g.csrf_form
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -177,7 +178,8 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    form = g.csrf_form
+    return render_template('users/following.html', user=user, form=form)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -233,6 +235,27 @@ def profile():
     """Update profile for current user."""
 
     # IMPLEMENT THIS
+    user = g.user
+    form = EditProfileForm(obj=user)
+
+    if form.validate_on_submit():
+        if User.authenticate(user.username, form.password.data):
+
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or DEFAULT_IMAGE_URL
+            user.header_image_url = form.header_image_url.data or DEFAULT_HEADER_IMAGE_URL
+            user.bio = form.bio.data
+
+            db.session.add(user)
+            db.session.commit()
+            flash("Information successfully updated", "success")
+            return redirect(f'/users/{user.id}')
+
+        else:
+            flash("Incorrect password", "danger")
+
+    return render_template("users/edit.html", form=form)
 
 
 @app.post('/users/delete')
@@ -330,7 +353,7 @@ def homepage():
                     .limit(100)
                     .all())
         form = g.csrf_form
-        return render_template('home.html', messages=messages, form = form)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')
