@@ -85,6 +85,12 @@ class User(db.Model):
         backref="following",
     )
 
+    liked_messages = db.relationship(
+        "Message",
+        secondary="likes",
+        backref="users"
+    )
+
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
@@ -142,6 +148,13 @@ class User(db.Model):
             user for user in self.following if user == other_user]
         return len(found_user_list) == 1
 
+    # def like_message(self, message_id):
+    #     """Likes a message given its id."""
+
+    #     liked_message = Likes(self.id, message_id)
+
+
+
 
 class Message(db.Model):
     """An individual message ("warble")."""
@@ -170,6 +183,22 @@ class Message(db.Model):
         nullable=False,
     )
 
+class Likes(db.Model):
+    """Connection of users <-> messages."""
+
+    __tablename__ = 'likes'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
 
 def connect_db(app):
     """Connect this database to provided Flask app.

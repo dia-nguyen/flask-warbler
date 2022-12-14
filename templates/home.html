@@ -56,6 +56,20 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
+
+               <form action="/messages/{{ msg.id }}/like" method="POST" class="like-btn">
+                  {{ g.csrf_form.hidden_tag() }}
+                  {% if msg in g.user.liked_messages %}
+                  <button style="z-index:10" class="btn btn-link position-relative">
+                    <i class="bi bi-star-fill"></i>
+                  </button>
+                  {% else %}
+                  <button style="z-index:10" class="btn btn-link position-relative">
+                    <i class="bi bi-star"></i>
+                  </button>
+                  {% endif %}
+                </form>
+
             </div>
           </li>
         {% endfor %}

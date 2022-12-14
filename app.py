@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFProtection, EditProfileForm
-from models import db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import db, connect_db, User, Message, Likes, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 
 load_dotenv()
 
@@ -275,7 +275,7 @@ def delete_user():
 
     do_logout()
 
-    db.session.delete(g.user)
+    User.query.filter(User.id == g.user.id).delete()
     db.session.commit()
 
     return redirect("/signup")
@@ -364,6 +364,27 @@ def homepage():
     else:
         return render_template('home-anon.html')
 
+##############################################################################
+# Liked messages
+
+@app.post("/messages/<int:message_id>/like")
+def toggle_like_message(message_id):
+    """Toggles liking message for the current user."""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    msg = Message.query.get_or_404(message_id)
+
+    if msg not in g.user.liked_messages:
+        g.user.liked_messages.append(msg)
+    else:
+        g.user.liked_messages.remove(msg)
+
+    db.session.commit()
+
+    return redirect('/')
 
 ##############################################################################
 # Turn off all caching in Flask
