@@ -34,13 +34,16 @@ connect_db(app)
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global."""
-
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        g.csrf_form = CSRFProtection()
 
     else:
         g.user = None
+
+@app.before_request
+def add_csrf_to_g():
+    """Adds CSRF Form to flask global."""
+    g.csrf_form = CSRFProtection()
 
 
 def do_login(user):
@@ -121,10 +124,9 @@ def logout():
 
     form = g.csrf_form
 
-    user = session[CURR_USER_KEY]
     if form.validate_on_submit():
-        flash(f"Good bye!", "success")
         do_logout()
+        flash(f"Good bye!", "success")
         return redirect("/login")
 
     # IMPLEMENT THIS AND FIX BUG
@@ -152,7 +154,7 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users, form=g.csrf_form)
+    return render_template('users/index.html', users=users)
 
 
 @app.get('/users/<int:user_id>')
@@ -165,7 +167,7 @@ def show_user(user_id):
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user, form=g.csrf_form)
+    return render_template('users/show.html', user=user)
 
 
 @app.get('/users/<int:user_id>/following')
@@ -177,7 +179,7 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user, form=g.csrf_form)
+    return render_template('users/following.html', user=user)
 
 
 @app.get('/users/<int:user_id>/followers')
@@ -189,7 +191,7 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=g.csrf_form)
+    return render_template('users/followers.html', user=user)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -232,7 +234,10 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     user = g.user
     form = EditProfileForm(obj=user)
 
@@ -346,16 +351,15 @@ def homepage():
     """
 
     if g.user:
-        showing_ids = [following.id for following in g.user.following]
-        showing_ids.append(g.user.id)
+        showing_ids = [following.id for following in g.user.following] + [g.user.id]
         messages = (Message
                     .query
-                    .order_by(Message.timestamp.desc())
                     .filter(Message.user_id.in_(showing_ids))
+                    .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=g.csrf_form)
+        return render_template('home.html', messages=messages)
 
     else:
         return render_template('home-anon.html')
