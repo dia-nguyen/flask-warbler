@@ -241,6 +241,8 @@ def profile():
     user = g.user
     form = EditProfileForm(obj=user)
 
+    breakpoint()
+
     if form.validate_on_submit():
         if User.authenticate(user.username, form.password.data):
 
@@ -260,6 +262,12 @@ def profile():
             flash("Incorrect password", "danger")
 
     return render_template("users/edit.html", form=form)
+
+@app.get("/users/<int:user_id>/likes")
+def get_user_likes(user_id):
+    """Display list of all messages liked by user id"""
+    user = User.query.get_or_404(user_id)
+    return render_template('users/liked-messages.html', messages=user.liked_messages, user=user)
 
 
 @app.post('/users/delete')
@@ -371,11 +379,15 @@ def homepage():
 def toggle_like_message(message_id):
     """Toggles liking message for the current user."""
 
+    msg = Message.query.get_or_404(message_id)
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    msg = Message.query.get_or_404(message_id)
+    if msg in g.user.messages:
+        flash("You cannot like your own post.", "danger")
+        return redirect(request.referrer)
 
     if msg not in g.user.liked_messages:
         g.user.liked_messages.append(msg)
@@ -384,7 +396,8 @@ def toggle_like_message(message_id):
 
     db.session.commit()
 
-    return redirect('/')
+    return redirect(request.referrer)
+
 
 ##############################################################################
 # Turn off all caching in Flask

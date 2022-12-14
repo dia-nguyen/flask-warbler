@@ -45,6 +45,8 @@
           <span class="text-muted">
               {{ message.timestamp.strftime('%d %B %Y') }}
             </span>
+          {% include 'users/like-button.html'%}
+
         </div>
       </li>
     </ul>

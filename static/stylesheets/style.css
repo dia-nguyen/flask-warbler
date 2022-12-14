@@ -549,3 +549,8 @@ p.card-bio {
 .message-404 input {
   flex: 1;
 }
+
+.btn.btn-like {
+  z-index:10;
+  padding: 0;
+}
