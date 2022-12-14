@@ -3,6 +3,7 @@
   <button class="btn btn-link position-relative btn-like">
     {% if message not in g.user.messages %}
       {% if message in g.user.liked_messages %}
+      <!-- consider time complexity and how to solve more efficiently (o(n)+m) -->
         <i class="bi bi-star-fill"></i>
       {% else %}
         <i class="bi bi-star"></i>

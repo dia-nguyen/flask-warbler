@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFProtection, EditProfileForm
-from models import db, connect_db, User, Message, Likes, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 
 load_dotenv()
 
@@ -388,6 +388,8 @@ def toggle_like_message(message_id):
     if msg in g.user.messages:
         flash("You cannot like your own post.", "danger")
         return redirect(request.referrer)
+        #in some cases adblocks can change referrer to something else / or remove
+        # would be better to use hidden inputs with info on where to redirect
 
     if msg not in g.user.liked_messages:
         g.user.liked_messages.append(msg)
