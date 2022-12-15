@@ -8,7 +8,7 @@
 import os
 from unittest import TestCase
 
-from models import db, User, Message, Follows, connect_db
+from models import db, User, connect_db
 from sqlalchemy import exc
 
 # BEFORE we import our app, let's set an environmental variable
@@ -81,7 +81,7 @@ class UserModelTestCase(TestCase):
         db.session.commit()
         self.assertEqual(new_user.username, "new_user")
         self.assertEqual(new_user.email, "new_user@email.com")
-        self.assertIn("$2b$12$", new_user.password)
+        self.assertNotEqual(new_user.password, "password")
 
     def test_unsuccessful_user_signup(self):
         User.signup("u1", "new_user@email.com", "password", None)
