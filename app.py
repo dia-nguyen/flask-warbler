@@ -45,6 +45,12 @@ def add_csrf_to_g():
     """Adds CSRF Form to flask global."""
     g.csrf_form = CSRFProtection()
 
+@app.before_request
+def add_liked_messages_to_g():
+    """Adds ids of liked messages to flask global."""
+    if CURR_USER_KEY in session:
+        g.user_liked_messages = {msg.id for msg in g.user.liked_messages}
+
 
 def do_login(user):
     """Log in user."""
@@ -366,12 +372,6 @@ def homepage():
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
-
-        #TODO: tomorrow idk
-        # dict = {
-        #     "liked": [],
-        #     "not_liked":[]
-        # }
 
         return render_template('home.html', messages=messages)
 

@@ -3,8 +3,7 @@
   <input name="current-url" type="hidden" value="{{ request.url }}">
   <button class="btn btn-link position-relative btn-like">
     {% if message.user_id != g.user.id %}
-      {% if message in g.user.liked_messages %}
-      <!-- consider time complexity and how to solve more efficiently (o(n)+m) -->
+      {% if message.id in g.user_liked_messages %}
         <i class="bi bi-star-fill"></i>
       {% else %}
         <i class="bi bi-star"></i>
