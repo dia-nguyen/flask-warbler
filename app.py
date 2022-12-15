@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -367,6 +367,12 @@ def homepage():
                     .limit(100)
                     .all())
 
+        #TODO: tomorrow idk
+        # dict = {
+        #     "liked": [],
+        #     "not_liked":[]
+        # }
+
         return render_template('home.html', messages=messages)
 
     else:
@@ -380,6 +386,7 @@ def toggle_like_message(message_id):
     """Toggles liking message for the current user."""
 
     msg = Message.query.get_or_404(message_id)
+    current_url = request.form['current-url']
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -387,9 +394,7 @@ def toggle_like_message(message_id):
 
     if msg in g.user.messages:
         flash("You cannot like your own post.", "danger")
-        return redirect(request.referrer)
-        #in some cases adblocks can change referrer to something else / or remove
-        # would be better to use hidden inputs with info on where to redirect
+        return redirect(current_url)
 
     if msg not in g.user.liked_messages:
         g.user.liked_messages.append(msg)
@@ -398,7 +403,7 @@ def toggle_like_message(message_id):
 
     db.session.commit()
 
-    return redirect(request.referrer)
+    return redirect(current_url)
 
 
 ##############################################################################

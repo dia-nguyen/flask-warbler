@@ -56,8 +56,7 @@
               <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
               <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ message.text }}</p>
-              {% include 'users/like-button.html'%}
-              <!-- change button to form -->
+              {% include 'users/like-form.html'%}
             </div>
           </li>
         {% endfor %}
