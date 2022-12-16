@@ -247,8 +247,6 @@ def profile():
     user = g.user
     form = EditProfileForm(obj=user)
 
-    breakpoint()
-
     if form.validate_on_submit():
         if User.authenticate(user.username, form.password.data):
 
@@ -261,11 +259,11 @@ def profile():
 
             db.session.add(user)
             db.session.commit()
-            flash("Information successfully updated", "success")
+            flash("Information successfully updated.", "success")
             return redirect(f'/users/{user.id}')
 
         else:
-            flash("Incorrect password", "danger")
+            flash("Incorrect password.", "danger")
 
     return render_template("users/edit.html", form=form)
 
@@ -292,6 +290,7 @@ def delete_user():
     User.query.filter(User.id == g.user.id).delete()
     db.session.commit()
 
+    flash("Your account has been deleted.", "success")
     return redirect("/signup")
 
 
@@ -338,7 +337,9 @@ def delete_message(message_id):
     """Delete a message.
 
     Check that this message was written by the current user.
-    Redirect to user page on success.
+    Redirect to user page on success. If the message was not
+    created by the currently logged in user, redirect to the
+    homepage.
     """
 
     if not g.user:
@@ -346,6 +347,11 @@ def delete_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
+
+    if msg.user_id != g.user.id:
+        flash("You cannot delete someone else's message!", "danger")
+        return redirect("/")
+
     db.session.delete(msg)
     db.session.commit()
 
