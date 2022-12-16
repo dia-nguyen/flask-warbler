@@ -43,6 +43,7 @@ app.config['WTF_CSRF_ENABLED'] = False
 
 class MessageBaseViewTestCase(TestCase):
     def setUp(self):
+        """Set up users and messages"""
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -60,6 +61,7 @@ class MessageBaseViewTestCase(TestCase):
 
 class MessageAddViewTestCase(MessageBaseViewTestCase):
     def test_add_message(self):
+        """Tests that user can add a message properly"""
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
         with self.client as c:
@@ -73,3 +75,23 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 302)
 
             Message.query.filter_by(text="Hello").one()
+
+    def test_delete_message(self):
+        """Tests that user can delete their message properly"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f"/messages/{self.m1_id}/delete")
+
+            self.assertEqual(resp.status_code, 302)
+
+            u1 = User.query.get(self.u1_id)
+
+            self.assertEqual(len(u1.messages), 0)
+
+
+
+
+
+

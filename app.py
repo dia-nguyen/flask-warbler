@@ -133,7 +133,8 @@ def logout():
     if form.validate_on_submit():
         do_logout()
         flash(f"Good bye!", "success")
-        return redirect("/login")
+
+    return redirect("/login")
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE

@@ -18,7 +18,7 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
+from app import app
 
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -62,6 +62,7 @@ class AnonViewTestCase(TestCase):
         db.session.rollback()
 
     def test_home_page(self):
+        """Tests that homepage displays for non logged in user properly"""
         with self.client as c:
             resp = c.get("/")
             html = resp.get_data(as_text=True)
@@ -70,6 +71,7 @@ class AnonViewTestCase(TestCase):
             self.assertIn('Sign up', html)
 
     def test_display_signup_form(self):
+        """Tests that sign up form displays for non logged in user properly"""
         with self.client as c:
             resp = c.get("/signup")
             html = resp.get_data(as_text=True)
@@ -78,6 +80,7 @@ class AnonViewTestCase(TestCase):
             self.assertIn('Sign me up!', html)
 
     def test_display_login_form(self):
+        """Tests that login form displays for non logged in user properly"""
         with self.client as c:
             resp = c.get("/login")
             html = resp.get_data(as_text=True)
@@ -85,8 +88,8 @@ class AnonViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn('Welcome back.', html)
 
-
     def test_unauthorized_view_following(self):
+        """Tests that non logged in users cannot view followings"""
         with self.client as c:
             resp = c.get(f"/users/{self.u1_id}/following",
             follow_redirects=True)
@@ -97,6 +100,7 @@ class AnonViewTestCase(TestCase):
             self.assertIn("Sign up", html)
 
     def test_unauthorized_view_add_message(self):
+        """Tests that non logged in users cannot view add message form"""
         with self.client as c:
             resp = c.get("/messages/new",
             follow_redirects=True)
@@ -107,6 +111,7 @@ class AnonViewTestCase(TestCase):
             self.assertIn("Sign up", html)
 
     def test_unauthorized_add_message(self):
+        """Tests that non logged in users cannot add new message"""
         with self.client as c:
             resp = c.post("/messages/new",
             data={"text": "Hello"},
@@ -118,6 +123,7 @@ class AnonViewTestCase(TestCase):
             self.assertIn("Sign up", html)
 
     def test_unauthorized_delete_message(self):
+        """Tests that non logged in users cannot delete message"""
         with self.client as c:
             resp = c.post(f"/messages/{self.m1_id}/delete",
             follow_redirects=True)

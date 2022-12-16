@@ -34,6 +34,7 @@ db.create_all()
 
 class UserModelTestCase(TestCase):
     def setUp(self):
+        """Set up users and messages"""
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -49,6 +50,7 @@ class UserModelTestCase(TestCase):
         db.session.rollback()
 
     def test_user_model(self):
+        """Tests that user exists"""
         u1 = User.query.get(self.u1_id)
 
         # User should have no messages & no followers
@@ -56,6 +58,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(u1.followers), 0)
 
     def test_is_following(self):
+        """Tests that is_follow method displays follows properly"""
         u1 = User.query.get(self.u1_id)
         u2 = User.query.get(self.u2_id)
 
@@ -66,6 +69,7 @@ class UserModelTestCase(TestCase):
         self.assertFalse(u2.is_following(u1))
 
     def test_is_followed_by(self):
+        """Tests that is_followed_by method displays followed by properly"""
         u1 = User.query.get(self.u1_id)
         u2 = User.query.get(self.u2_id)
 
@@ -76,6 +80,7 @@ class UserModelTestCase(TestCase):
         self.assertFalse(u1.is_followed_by(u2))
 
     def test_successful_user_signup(self):
+        """Tests that user can sign up properly"""
         new_user = User.signup("new_user", "new_user@email.com", "password", None)
 
         db.session.commit()
@@ -84,21 +89,25 @@ class UserModelTestCase(TestCase):
         self.assertNotEqual(new_user.password, "password")
 
     def test_unsuccessful_user_signup(self):
-        User.signup("u1", "new_user@email.com", "password", None)
+        """Tests that user cannot use existing email or username properly"""
         with self.assertRaises(exc.IntegrityError):
+            User.signup("u1", "new_user@email.com", "password", None)
             db.session.commit()
 
     def test_valid_credentials(self):
+        """Tests that valid credentials can log in properly"""
         u1 = User.query.get(self.u1_id)
         valid_credentials = User.authenticate("u1", "password")
 
         self.assertEqual(valid_credentials, u1)
 
     def test_invalid_username(self):
+        """Tests that invalid username cannot log in, properly"""
         invalid_credentials = User.authenticate("u3", "password")
         self.assertFalse(invalid_credentials)
 
     def test_invalid_password(self):
+        """Tests that invalid password cannot log in, properly"""
         invalid_credentials = User.authenticate("u1", "wrongpassword")
         self.assertFalse(invalid_credentials)
 

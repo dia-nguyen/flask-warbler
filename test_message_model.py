@@ -30,6 +30,7 @@ db.create_all()
 
 class UserModelTestCase(TestCase):
     def setUp(self):
+        """Set up users and messages"""
         User.query.delete()
         Message.query.delete()
 

@@ -39,8 +39,11 @@ db.create_all()
 
 app.config['WTF_CSRF_ENABLED'] = False
 
+#make multiple classes and group test cases by categories
+#can have their own setup/tear down or inherit from base testcase
 class UserViewTestCase(TestCase):
     def setUp(self):
+        """Set up users and messages"""
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
@@ -64,8 +67,8 @@ class UserViewTestCase(TestCase):
     def teardown(self):
         db.session.rollback()
 
-
     def test_signup(self):
+        """Tests that user can sign up properly"""
         with self.client as c:
             resp = c.post("/signup",
             data={
@@ -96,7 +99,11 @@ class UserViewTestCase(TestCase):
     #         self.assertIn('Sign me up!', html)
     #         self.assertIn("Username already taken", html)
 
+    # with self.assertRaises(exc.IntegrityError):
+
+
     def test_home_logged_in(self):
+        """Tests that home page displays as logged in user properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -107,6 +114,7 @@ class UserViewTestCase(TestCase):
             self.assertIn('@u1', html)
 
     def test_login(self):
+        """Tests that user can login properly"""
         with self.client as c:
             resp = c.post("/login",
             data={
@@ -120,6 +128,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("Hello, u1!", html)
 
     def test_logout(self):
+        """Tests that user can logout properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -133,6 +142,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("Good bye!", html)
 
     def test_display_all_users(self):
+        """Tests that user can view all users properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -147,6 +157,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("u3", html)
 
     def test_search_user(self):
+        """Tests that user can search for users properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -162,6 +173,7 @@ class UserViewTestCase(TestCase):
             self.assertNotIn("u3", html)
 
     def test_search_invalid_user(self):
+        """Tests that invalid user search will show 'No users found' properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -174,7 +186,9 @@ class UserViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Sorry, no users found", html)
 
+    #this is for search query
     def test_display_user_profile(self):
+        """Tests that user can view user profile properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -190,6 +204,7 @@ class UserViewTestCase(TestCase):
 
 
     def test_display_following(self):
+        """Tests that user can view user following properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -203,6 +218,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("Unfollow", html)
 
     def test_display_followers(self):
+        """Tests that user can view user followers properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -213,6 +229,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("@u3", html)
 
     def test_start_following(self):
+        """Tests that following another user works properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -224,8 +241,10 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn("@u3", html)
+            #test length of following list
 
     def test_stop_following(self):
+        """Tests that unfollowing another user works properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -239,6 +258,7 @@ class UserViewTestCase(TestCase):
             self.assertNotIn("@u2", html)
 
     def test_update_profile(self):
+        """Tests that user can update their profile properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -257,6 +277,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("California", html)
 
     def test_invalid_update_profile(self):
+        """Tests that user cannot update their profile with incorrect password properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -274,6 +295,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("Incorrect password.", html)
 
     def test_view_likes(self):
+        """Tests that user can view likes properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -291,12 +313,15 @@ class UserViewTestCase(TestCase):
             self.assertIn("bi-star-fill", html)
 
     def test_like_message(self):
+        """Tests that user can like message properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            resp = c.post(f"/messages/{self.m1_id}/like",
-            follow_redirects=True)
+            resp = c.post(
+                f"/messages/{self.m1_id}/like",
+                follow_redirects=True
+            )
 
             html = resp.get_data(as_text=True)
 
@@ -304,6 +329,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("bi-star-fill", html)
 
     def test_unlike_message(self):
+        """Tests that user can unlike message properly"""
         u1 = User.query.get(self.u1_id)
         m1 = Message.query.get(self.m1_id)
         u1.liked_messages.append(m1)
@@ -321,6 +347,7 @@ class UserViewTestCase(TestCase):
             self.assertIn('bi-star">', html)
 
     def test_delete_user(self):
+        """Tests that user can delete account properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -335,6 +362,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("Sign me up", html)
 
     def test_delete_other_user_message(self):
+        """Tests that user cannot delete other user messages properly"""
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
