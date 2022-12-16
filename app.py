@@ -392,7 +392,10 @@ def toggle_like_message(message_id):
     """Toggles liking message for the current user."""
 
     msg = Message.query.get_or_404(message_id)
-    current_url = request.form['current-url']
+    current_url = request.form.get('current-url')
+
+    if not current_url:
+        current_url = "/"
 
     if not g.user:
         flash("Access unauthorized.", "danger")

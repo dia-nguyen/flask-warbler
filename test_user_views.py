@@ -282,18 +282,18 @@ class UserViewTestCase(TestCase):
             self.assertIn("test message", html)
             self.assertIn("bi-star-fill", html)
 
-    # def test_like_message(self):
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.u1_id
+    def test_like_message(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
 
-    #         resp = c.post(f"/messages/{self.m1_id}/like",
-    #         follow_redirects=True)
+            resp = c.post(f"/messages/{self.m1_id}/like",
+            follow_redirects=True)
 
-    #         html = resp.get_data(as_text=True)
+            html = resp.get_data(as_text=True)
 
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("bi-star-fill", html)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("bi-star-fill", html)
 
     def test_delete_user(self):
         with self.client as c:
