@@ -88,6 +88,45 @@ class AnonViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn('Welcome back.', html)
 
+    def test_unauthorized_display_all_users(self):
+        """Tests that unlogged in user cannot view all users page."""
+        with self.client as c:
+            resp = c.get(
+                "/users",
+                follow_redirects=True
+            )
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_display_specific_users(self):
+        """Tests that unlogged in user cannot view a user's page."""
+        with self.client as c:
+            resp = c.get(
+                f"/users/{self.u1_id}",
+                follow_redirects=True
+                )
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_view_followed(self):
+        """Tests that non logged in users cannot view a user's followers"""
+        with self.client as c:
+            resp = c.get(f"/users/{self.u1_id}/followers",
+            follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
     def test_unauthorized_view_following(self):
         """Tests that non logged in users cannot view followings"""
         with self.client as c:
@@ -99,11 +138,68 @@ class AnonViewTestCase(TestCase):
             self.assertIn("Access unauthorized.", html)
             self.assertIn("Sign up", html)
 
+    def test_unauthorized_follow(self):
+        """Tests that an unlogged in user cannot follow someone."""
+        with self.client as c:
+            resp = c.post(f"/users/follow/{self.u1_id}",
+            follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_unfollow(self):
+        """Tests that an unlogged in user cannot unfollow someone."""
+        with self.client as c:
+            resp = c.post(f"/users/stop-following/{self.u1_id}",
+            follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_edit_profile(self):
+        """Tests that an unlogged in user cannot edit their own profile."""
+        with self.client as c:
+
+            resp = c.post("/users/profile",
+            data={
+                'location': 'California',
+                'password': 'password',
+            },
+            follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_view_message(self):
+        """Tests that an unlogged in user cannot view a message."""
+        with self.client as c:
+
+            resp = c.get(
+                f"/messages/{self.m1_id}",
+                follow_redirects=True
+                )
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
     def test_unauthorized_view_add_message(self):
         """Tests that non logged in users cannot view add message form"""
         with self.client as c:
             resp = c.get("/messages/new",
             follow_redirects=True)
+
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
@@ -118,6 +214,21 @@ class AnonViewTestCase(TestCase):
             follow_redirects=True)
 
             html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_like_message(self):
+        """Tests that an unlogged in user cannot like a message."""
+        with self.client as c:
+            resp = c.post(
+                f"/messages/{self.m1_id}/like",
+                follow_redirects=True
+            )
+
+            html = resp.get_data(as_text=True)
+
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized.", html)
             self.assertIn("Sign up", html)
@@ -129,6 +240,20 @@ class AnonViewTestCase(TestCase):
             follow_redirects=True)
 
             html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Access unauthorized.", html)
+            self.assertIn("Sign up", html)
+
+    def test_unauthorized_delete_user(self):
+        """Tests that an unlogged in user cannot delete their own profile."""
+        with self.client as c:
+
+            resp = c.post("/users/delete",
+            follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized.", html)
             self.assertIn("Sign up", html)

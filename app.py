@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for, jsonify
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -387,6 +387,27 @@ def homepage():
 
 ##############################################################################
 # Liked messages
+
+# @app.post("/messages/<int:message_id>/like")
+# def toggle_like_message(message_id):
+#     """Toggles liking message for the current user."""
+
+#     msg = Message.query.get_or_404(message_id)
+
+#     if not g.user:
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+
+#     if msg not in g.user.liked_messages:
+#         g.user.liked_messages.append(msg)
+#     else:
+#         g.user.liked_messages.remove(msg)
+
+#     db.session.commit()
+
+#     return jsonify(message_id=message_id)
+
 
 @app.post("/messages/<int:message_id>/like")
 def toggle_like_message(message_id):

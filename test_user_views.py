@@ -8,6 +8,7 @@
 import os
 from unittest import TestCase
 from models import db, Message, User, connect_db
+from flask import session
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -50,10 +51,12 @@ class UserViewTestCase(TestCase):
         u2 = User.signup("u2", "u2@email.com", "password", None)
         u3 = User.signup("u3", "u3@email.com", "password", None)
         m1 = Message(text="test message")
-        db.session.add_all([u1, u2, u3, m1])
+        m2 = Message(text="test message 2")
+        db.session.add_all([u1, u2, u3, m1, m2])
         u1.following.append(u2)
         u3.following.append(u1)
         u2.messages.append(m1)
+        u1.messages.append(m2)
 
         db.session.commit()
 
@@ -61,6 +64,7 @@ class UserViewTestCase(TestCase):
         self.u2_id = u2.id
         self.u3_id = u3.id
         self.m1_id = m1.id
+        self.m2_id = m2.id
 
         self.client = app.test_client()
 
@@ -82,24 +86,20 @@ class UserViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("@test_user", html)
 
-    #TODO: invalid sign up
-    # def test_invalid_sign_up(self):
-    #     with self.client as c:
-    #         resp = c.post("/signup",
-    #         data={
-    #             'username': 'u1',
-    #             'email': 'test@email.com',
-    #             'password': 'testpassword',
-    #         },
-    #         follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
+    def test_invalid_sign_up(self):
+        with self.client as c:
+            resp = c.post("/signup",
+            data={
+                'username': 'testuser',
+                'email': 't',
+                'password': 'testpassword',
+            },
+            follow_redirects=True)
+            html = resp.get_data(as_text=True)
 
-    #         self.assertEqual(resp.status_code, 200)
-    #         # check to see if still on sign up form
-    #         self.assertIn('Sign me up!', html)
-    #         self.assertIn("Username already taken", html)
-
-    # with self.assertRaises(exc.IntegrityError):
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Sign me up!', html)
+            self.assertIn("Invalid email address.", html)
 
 
     def test_home_logged_in(self):
@@ -126,6 +126,20 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Hello, u1!", html)
+
+    def test_invalid_login(self):
+        """Tests that invalid credentials cannot login."""
+        with self.client as c:
+            resp = c.post("/login",
+            data={
+                'username': 'u1',
+                'password': 'passwords',
+            },
+            follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Invalid credentials.", html)
 
     def test_logout(self):
         """Tests that user can logout properly"""
@@ -345,6 +359,22 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('bi-star">', html)
+
+    def test_like_own_message(self):
+        """Tests that user can like message properly"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(
+                f"/messages/{self.m2_id}/like",
+                follow_redirects=True
+            )
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("You cannot like your own post.", html)
 
     def test_delete_user(self):
         """Tests that user can delete account properly"""

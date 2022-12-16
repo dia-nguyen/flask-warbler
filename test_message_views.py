@@ -60,6 +60,18 @@ class MessageBaseViewTestCase(TestCase):
 
 
 class MessageAddViewTestCase(MessageBaseViewTestCase):
+    def test_add_message_form(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get("/messages/new")
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Add my message!", html)
+
     def test_add_message(self):
         """Tests that user can add a message properly"""
         # Since we need to change the session to mimic logging in,
@@ -82,16 +94,27 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
 
-            resp = c.post(f"/messages/{self.m1_id}/delete")
+            resp = c.post(
+                f"/messages/{self.m1_id}/delete",
+                follow_redirects=True)
 
-            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(resp.status_code, 200)
 
             u1 = User.query.get(self.u1_id)
 
             self.assertEqual(len(u1.messages), 0)
 
+    def test_view_message(self):
+        """Tests that user can view a message."""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
 
+            resp = c.get(f"/messages/{self.m1_id}")
 
+            html = resp.get_data(as_text=True)
 
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("m1-text", html)
 
 

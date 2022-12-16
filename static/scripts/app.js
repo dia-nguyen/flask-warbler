@@ -1,0 +1,2 @@
+const $messageArea = $('.message-area')
+
