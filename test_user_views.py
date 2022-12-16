@@ -64,13 +64,6 @@ class UserViewTestCase(TestCase):
     def teardown(self):
         db.session.rollback()
 
-    def test_display_signup_form(self):
-        with self.client as c:
-            resp = c.get("/signup")
-            html = resp.get_data(as_text=True)
-
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn('Sign me up!', html)
 
     def test_signup(self):
         with self.client as c:
@@ -103,13 +96,15 @@ class UserViewTestCase(TestCase):
     #         self.assertIn('Sign me up!', html)
     #         self.assertIn("Username already taken", html)
 
-    def test_display_login_form(self):
+    def test_home_logged_in(self):
         with self.client as c:
-            resp = c.get("/login")
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+            resp = c.get("/")
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
-            self.assertIn('Welcome back.', html)
+            self.assertIn('@u1', html)
 
     def test_login(self):
         with self.client as c:
@@ -151,7 +146,7 @@ class UserViewTestCase(TestCase):
             self.assertIn("u2", html)
             self.assertIn("u3", html)
 
-    def test_display_specific_user(self):
+    def test_search_user(self):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess[CURR_USER_KEY] = self.u1_id
@@ -165,6 +160,19 @@ class UserViewTestCase(TestCase):
             self.assertIn("u1", html)
             self.assertNotIn("u2", html)
             self.assertNotIn("u3", html)
+
+    def test_search_invalid_user(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get("/users",
+            query_string={'q':"idontexist"})
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("Sorry, no users found", html)
 
     def test_display_user_profile(self):
         with self.client as c:
@@ -295,6 +303,23 @@ class UserViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("bi-star-fill", html)
 
+    def test_unlike_message(self):
+        u1 = User.query.get(self.u1_id)
+        m1 = Message.query.get(self.m1_id)
+        u1.liked_messages.append(m1)
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f"/messages/{self.m1_id}/like",
+            follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('bi-star">', html)
+
     def test_delete_user(self):
         with self.client as c:
             with c.session_transaction() as sess:
@@ -308,47 +333,6 @@ class UserViewTestCase(TestCase):
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Your account has been deleted.", html)
             self.assertIn("Sign me up", html)
-
-    def test_unauthorized_view_following(self):
-        with self.client as c:
-            resp = c.get(f"/users/{self.u1_id}/following",
-            follow_redirects=True)
-            html = resp.get_data(as_text=True)
-
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized.", html)
-            self.assertIn("Sign up", html)
-
-    def test_unauthorized_view_add_message(self):
-        with self.client as c:
-            resp = c.get("/messages/new",
-            follow_redirects=True)
-            html = resp.get_data(as_text=True)
-
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized.", html)
-            self.assertIn("Sign up", html)
-
-    def test_unauthorized_add_message(self):
-        with self.client as c:
-            resp = c.post("/messages/new",
-            data={"text": "Hello"},
-            follow_redirects=True)
-
-            html = resp.get_data(as_text=True)
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized.", html)
-            self.assertIn("Sign up", html)
-
-    def test_unauthorized_delete_message(self):
-        with self.client as c:
-            resp = c.post(f"/messages/{self.m1_id}/delete",
-            follow_redirects=True)
-
-            html = resp.get_data(as_text=True)
-            self.assertEqual(resp.status_code, 200)
-            self.assertIn("Access unauthorized.", html)
-            self.assertIn("Sign up", html)
 
     def test_delete_other_user_message(self):
         with self.client as c:
