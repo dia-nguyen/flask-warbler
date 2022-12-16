@@ -14,7 +14,7 @@
              class="timeline-image">
       </a>
 
-      <div class="message-area">
+      <div class="message-area" data-id="{{message.id}}">
         <a href="/users/{{ user.id }}">@{{ user.username }}</a>
         <span class="text-muted">
               {{ message.timestamp.strftime('%d %B %Y') }}

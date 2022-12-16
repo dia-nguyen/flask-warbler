@@ -388,25 +388,11 @@ def homepage():
 ##############################################################################
 # Liked messages
 
-# @app.post("/messages/<int:message_id>/like")
-# def toggle_like_message(message_id):
-#     """Toggles liking message for the current user."""
+@app.get("/user-likes")
+def show_user_likes():
+    """Returns json with users liked messages"""
 
-#     msg = Message.query.get_or_404(message_id)
-
-#     if not g.user:
-#         flash("Access unauthorized.", "danger")
-#         return redirect("/")
-
-
-#     if msg not in g.user.liked_messages:
-#         g.user.liked_messages.append(msg)
-#     else:
-#         g.user.liked_messages.remove(msg)
-
-#     db.session.commit()
-
-#     return jsonify(message_id=message_id)
+    return jsonify(userLikes=list(g.user_liked_messages))
 
 
 @app.post("/messages/<int:message_id>/like")
@@ -414,18 +400,10 @@ def toggle_like_message(message_id):
     """Toggles liking message for the current user."""
 
     msg = Message.query.get_or_404(message_id)
-    current_url = request.form.get('current-url')
-
-    if not current_url:
-        current_url = "/"
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-
-    if msg in g.user.messages:
-        flash("You cannot like your own post.", "danger")
-        return redirect(current_url)
 
     if msg not in g.user.liked_messages:
         g.user.liked_messages.append(msg)
@@ -434,7 +412,35 @@ def toggle_like_message(message_id):
 
     db.session.commit()
 
-    return redirect(current_url)
+    return jsonify(messageId=message_id)
+
+
+# @app.post("/messages/<int:message_id>/like")
+# def toggle_like_message(message_id):
+#     """Toggles liking message for the current user."""
+
+#     msg = Message.query.get_or_404(message_id)
+#     current_url = request.form.get('current-url')
+
+#     if not current_url:
+#         current_url = "/"
+
+#     if not g.user:
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+#     if msg in g.user.messages:
+#         flash("You cannot like your own post.", "danger")
+#         return redirect(current_url)
+
+#     if msg not in g.user.liked_messages:
+#         g.user.liked_messages.append(msg)
+#     else:
+#         g.user.liked_messages.remove(msg)
+
+#     db.session.commit()
+
+#     return redirect(current_url)
 
 
 ##############################################################################

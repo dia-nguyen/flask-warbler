@@ -1,4 +1,4 @@
-  <form action="/messages/{{ message.id }}/like" method="POST" class="like-form">
+  <!-- <form action="/messages/{{ message.id }}/like" method="POST" class="like-form">
   {{ g.csrf_form.hidden_tag() }}
   <input name="current-url" type="hidden" value="{{ request.url }}">
   <button class="btn btn-link position-relative btn-like">
@@ -10,4 +10,15 @@
       {% endif %}
     {% endif %}
   </button>
-</form>
+</form> -->
+
+
+<button class="btn btn-link position-relative btn-like">
+  {% if message.user_id != g.user.id %}
+    {% if message.id in g.user_liked_messages %}
+      <i class="bi bi-star-fill"></i>
+    {% else %}
+      <i class="bi bi-star"></i>
+    {% endif %}
+  {% endif %}
+</button>
