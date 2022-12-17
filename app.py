@@ -51,6 +51,12 @@ def add_liked_messages_to_g():
     if CURR_USER_KEY in session:
         g.user_liked_messages = {msg.id for msg in g.user.liked_messages}
 
+@app.before_request
+def add_message_form_to_g():
+    """Adds new message form to flask global."""
+    if CURR_USER_KEY in session:
+        g.new_message_form = MessageForm()
+
 
 def do_login(user):
     """Log in user."""
@@ -298,16 +304,19 @@ def delete_user():
 ##############################################################################
 # Messages routes:
 
-@app.route('/messages/new', methods=["GET", "POST"])
+@app.post('/messages/new')
 def add_message():
-    """Add a message:
-
-    Show form if GET. If valid, update message and redirect to user page.
+    """Add a message: If valid, update message and redirect to user page.
     """
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
+    current_url = request.form.get('current-url')
+
+    if not current_url:
+        current_url = "/"
 
     form = MessageForm()
 
@@ -316,9 +325,7 @@ def add_message():
         g.user.messages.append(msg)
         db.session.commit()
 
-        return redirect(f"/users/{g.user.id}")
-
-    return render_template('messages/create.html', form=form)
+        return redirect(current_url)
 
 
 @app.get('/messages/<int:message_id>')
@@ -414,6 +421,24 @@ def toggle_like_message(message_id):
 
     return jsonify(messageId=message_id)
 
+#pass in logic about whether or not msg is liked
+
+##############################################################################
+# Turn off all caching in Flask
+#   (useful for dev; in production, this kind of stuff is typically
+#   handled elsewhere)
+#
+# https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+
+@app.after_request
+def add_header(response):
+    """Add non-caching headers on every request."""
+
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+    response.cache_control.no_store = True
+    return response
+
+
 
 # @app.post("/messages/<int:message_id>/like")
 # def toggle_like_message(message_id):
@@ -443,17 +468,24 @@ def toggle_like_message(message_id):
 #     return redirect(current_url)
 
 
-##############################################################################
-# Turn off all caching in Flask
-#   (useful for dev; in production, this kind of stuff is typically
-#   handled elsewhere)
-#
-# https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+# @app.route('/messages/new', methods=["GET", "POST"])
+# def add_message():
+#     """Add a message:
 
-@app.after_request
-def add_header(response):
-    """Add non-caching headers on every request."""
+#     Show form if GET. If valid, update message and redirect to user page.
+#     """
 
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-    response.cache_control.no_store = True
-    return response
+#     if not g.user:
+#         flash("Access unauthorized.", "danger")
+#         return redirect("/")
+
+#     form = MessageForm()
+
+#     if form.validate_on_submit():
+#         msg = Message(text=form.text.data)
+#         g.user.messages.append(msg)
+#         db.session.commit()
+
+#         return redirect(f"/users/{g.user.id}")
+
+#     return render_template('messages/create.html', form=form)

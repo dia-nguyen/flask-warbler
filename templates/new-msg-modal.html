@@ -1,0 +1,35 @@
+<div class="modal fade mt-5" id="newMsg" tabindex="-1" aria-labelledby="newMsgLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Message</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" action="/messages/new">
+        {{ g.new_message_form.csrf_token }}
+        <input name="current-url" type="hidden" value="{{ request.url }}">
+        <div class="modal-body">
+
+          {% if g.new_message_form.text.errors %}
+            {% for error in g.new_message_form.text.errors %}
+              <span class="text-danger">
+                {{ error }}
+              </span>
+            {% endfor %}
+          {% endif %}
+          {{ g.new_message_form.text(
+              placeholder="What's happening?",
+              class="form-control",
+              rows="3") }}
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary">Add message</button>
+        </div>
+      </form>
+
+
+    </div>
+  </div>
+</div>
